@@ -1,0 +1,82 @@
+@extends('theme.main')
+
+@section('pagecss')
+@endsection
+
+@section('content')
+    <div class="wrapper p-5">
+        
+        <div class="row">
+        
+            <div class="col-md-6">
+                <strong class="text-uppercase">{{ $page->name }}</strong>
+
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url('/') }}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('receiving.suppliers.index') }}">{{ $page->name }}</a></li>
+                        <li class="breadcrumb-item">Edit</li>
+                    </ol>
+                </nav>
+                
+            </div>
+        </div>
+        
+        <div class="row mt-5">
+
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Supplier's Information</div>
+
+                        <div class="card-body">
+                            
+							<form method="post" action="{{ route('receiving.suppliers.update', $supplier->id) }}">
+                                @csrf
+                                @method('PUT')
+								<div class="form-group row">
+									<label for="name" class="col-sm-2 col-form-label">Name</label>
+									<div class="col-sm-10">
+										<input type="text" class="form-control" id="name" name="name" value="{{ $supplier->name }}" required>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label for="name" class="col-sm-2 col-form-label">Address</label>
+									<div class="col-sm-10">
+										<input type="text" class="form-control" id="address" name="address" value="{{ $supplier->address }}">
+									</div>
+								</div>
+								<div class="form-group row">
+									<label for="name" class="col-sm-2 col-form-label">Cellphone #</label>
+									<div class="col-sm-10">
+                                        <input type="number" class="form-control" id="cellphone_no" name="cellphone_no" step="1" value="{{ $supplier->cellphone_no }}">
+									</div>
+								</div>
+								<div class="form-group row">
+									<label for="name" class="col-sm-2 col-form-label">Telephone #</label>
+									<div class="col-sm-10">
+										<input type="number" class="form-control" id="telephone_no" name="telephone_no" value="{{ $supplier->telephone_no }}">
+									</div>
+								</div>
+                                
+								<div class="form-group row">
+									<div class="col-sm-10">
+										<button type="submit" class="btn btn-primary">Save</button>
+										<a href="{{ route('receiving.suppliers.index') }}" class="btn btn-light">Back</a>
+									</div>
+								</div>
+							</form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+
+    </div>
+
+@endsection
+
+@section('pagejs')
+@endsection

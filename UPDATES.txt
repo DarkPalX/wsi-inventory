@@ -1,0 +1,383 @@
+###################### JANUARY 26, 2026 #######################
+- Add requested_by, prepared_by, approved_by in settings
+- Add PIC (person in charge) in suppliers TABLE
+- Remove MRS display if none
+
+
+
+QUERY UPDATES
+
+settings
+ - add purchase_order_requested_by VARCHAR(250) DEFAULT NULL
+ - add purchase_order_prepared_by VARCHAR(250) DEFAULT NULL
+ - add purchase_order_approved_by VARCHAR(250) DEFAULT NULL
+
+
+	ALTER TABLE settings ADD purchase_order_requested_by VARCHAR(250) DEFAULT NULL;
+	ALTER TABLE settings ADD purchase_order_prepared_by VARCHAR(250) DEFAULT NULL;
+	ALTER TABLE settings ADD purchase_order_approved_by VARCHAR(250) DEFAULT NULL;
+
+
+suppliers
+ - add person_in_charge VARCHAR(250) DEFAULT NULL
+
+	ALTER TABLE suppliers ADD person_in_charge VARCHAR(250) DEFAULT NULL;
+
+
+
+###################### JANUARY 14, 2026 #######################
+DONE - Fix Create Issuance Issue
+DONE - Inventory report - remove the vat from cost. then create a new column for vat
+DONE - Add Non-Inventory Report
+DONE - Add Purpose for PO Items even no MRS
+
+
+
+
+
+
+
+QUERY UPDATES
+
+receiving_details
+ - vat decimal (16,2) default 0.00
+ - vat_inclusive_price decimal (16,2) default 0.00
+
+ 	ALTER TABLE receiving_details ADD vat DECIMAL(16,2) NOT NULL DEFAULT 0.00;
+ 	ALTER TABLE receiving_details ADD vat_inclusive_price DECIMAL(16,2) NOT NULL DEFAULT 0.00;
+
+
+ items
+ - is_inventory default 1
+
+	ALTER TABLE items ADD is_inventory TINYINT(1) NOT NULL DEFAULT 1;
+
+
+ issuance_headers
+ - ris_no nullable
+ - section_id nullable
+
+	ALTER TABLE issuance_headers ADD ris_no VARCHAR(50) DEFAULT NULL;
+	ALTER TABLE issuance_headers ADD section_id VARCHAR(50) DEFAULT NULL;
+
+
+ suppliers
+ - is_vatable default 0
+ - check_no nullable
+ - tin_no nullable
+ - email nullable
+ - bank_name nullable
+ - bank_account_no nullable
+
+	ALTER TABLE suppliers ADD check_no VARCHAR(50) DEFAULT NULL;
+	ALTER TABLE suppliers ADD tin_no VARCHAR(50) DEFAULT NULL;
+	ALTER TABLE suppliers ADD email VARCHAR(50) DEFAULT NULL;
+	ALTER TABLE suppliers ADD bank_name VARCHAR(50) DEFAULT NULL;
+	ALTER TABLE suppliers ADD bank_account_no VARCHAR(50) DEFAULT NULL;
+	ALTER TABLE suppliers ADD is_vatable TINYINT(1) NOT NULL DEFAULT 1;
+
+
+ purchase_order_details
+ - ris_no nullable
+ - section_id nullable
+ - vat decimal (16,2) default 0.00
+ - vat_inclusive_price decimal (16,2) default 0.00
+ - purpose VARCHAR(100) NULL
+ - remarks VARCHAR(100) NULL
+
+	ALTER TABLE purchase_order_details ADD ris_no VARCHAR(50) DEFAULT NULL;
+	ALTER TABLE purchase_order_details ADD section_id VARCHAR(50) DEFAULT NULL;
+ 	ALTER TABLE purchase_order_details ADD vat DECIMAL(16,2) NOT NULL DEFAULT 0.00;
+ 	ALTER TABLE purchase_order_details ADD vat_inclusive_price DECIMAL(16,2) NOT NULL DEFAULT 0.00;
+	ALTER TABLE purchase_order_details ADD purpose VARCHAR(50) DEFAULT NULL;
+	ALTER TABLE purchase_order_details ADD remarks VARCHAR(50) DEFAULT NULL;
+
+ vehicles
+ - type nullable
+
+	ALTER TABLE vehicles ADD type VARCHAR(50) DEFAULT NULL;
+	
+
+NEW TABLES TO IMPORT
+-requisition_headers
+
+	CREATE TABLE `requisition_headers` (
+		`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+		`ref_no` VARCHAR(255) NULL,
+		`date_requested` DATE NOT NULL,
+		`date_needed` DATE NOT NULL,
+		`requisition_type` VARCHAR(255) NULL,
+		`requisition_parts_needed` VARCHAR(255) NULL,
+		`requisition_assessment` VARCHAR(255) NULL,
+		`vehicle_id` VARCHAR(255) NULL,
+		`purpose` LONGTEXT NULL,
+		`remarks` LONGTEXT NULL,
+		`status` VARCHAR(255) NOT NULL DEFAULT 'SAVED',
+		`requested_by` BIGINT UNSIGNED NULL,
+		`requested_at` TIMESTAMP NULL,
+		`approved_by` BIGINT UNSIGNED NULL,
+		`approved_at` TIMESTAMP NULL,
+		`posted_by` BIGINT UNSIGNED NULL,
+		`posted_at` TIMESTAMP NULL,
+		`cancelled_by` BIGINT UNSIGNED NULL,
+		`cancelled_at` TIMESTAMP NULL,
+		`created_by` BIGINT UNSIGNED NULL,
+		`updated_by` BIGINT UNSIGNED NULL,
+		`created_at` TIMESTAMP NULL,
+		`updated_at` TIMESTAMP NULL,
+		`deleted_at` TIMESTAMP NULL,
+		PRIMARY KEY (`id`)
+	);
+
+
+-requisition_details
+
+	CREATE TABLE `requisition_details` (
+		`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+		`requisition_header_id` BIGINT UNSIGNED NULL,
+		`ref_no` VARCHAR(255) NOT NULL,
+		`item_id` BIGINT UNSIGNED NULL,
+		`sku` VARCHAR(255) NULL,
+		`quantity` DECIMAL(16,0) NULL DEFAULT 0,
+		`purpose` VARCHAR(100) NULL,
+		`remarks` VARCHAR(100) NULL,
+		`created_at` TIMESTAMP NULL,
+		`updated_at` TIMESTAMP NULL,
+		PRIMARY KEY (`id`)
+	);
+
+
+-settings (THIS IS NEW SO IMPORT THIS)
+
+	DROP TABLE settings;
+
+
+	CREATE TABLE settings (
+		id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+		api_key TEXT NULL,
+		website_name VARCHAR(150) NOT NULL,
+		website_favicon TEXT NOT NULL,
+		company_logo TEXT NOT NULL,
+		company_favicon TEXT NOT NULL,
+		company_name VARCHAR(150) NOT NULL,
+		company_about TEXT NOT NULL,
+		company_address TEXT NOT NULL,
+		google_analytics TEXT NULL,
+		google_map TEXT NULL,
+		google_recaptcha_sitekey TEXT NULL,
+		google_recaptcha_secret TEXT NULL,
+		data_privacy_title VARCHAR(150) NOT NULL,
+		data_privacy_popup_content VARCHAR(150) NOT NULL,
+		data_privacy_content TEXT NOT NULL,
+		mobile_no VARCHAR(255) NULL,
+		fax_no VARCHAR(255) NULL,
+		tel_no VARCHAR(255) NULL,
+		tin_no VARCHAR(255) NULL,
+		email VARCHAR(255) NULL,
+		social_media_accounts TEXT NULL,
+		copyright VARCHAR(255) NULL,
+		user_id BIGINT UNSIGNED NULL,
+
+		purchase_order_verifier1 VARCHAR(255) NULL,
+		purchase_order_checker VARCHAR(255) NULL,
+		purchase_order_verifier2 VARCHAR(255) NULL,
+
+		created_at TIMESTAMP NULL DEFAULT NULL,
+		updated_at TIMESTAMP NULL DEFAULT NULL,
+		deleted_at TIMESTAMP NULL DEFAULT NULL
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+	INSERT INTO settings (
+		api_key,
+		website_name,
+		website_favicon,
+		company_logo,
+		company_favicon,
+		company_name,
+		company_about,
+		company_address,
+		google_map,
+		google_recaptcha_sitekey,
+		google_recaptcha_secret,
+		data_privacy_title,
+		data_privacy_popup_content,
+		data_privacy_content,
+		mobile_no,
+		fax_no,
+		tel_no,
+		email,
+		social_media_accounts,
+		copyright,
+		user_id,
+		created_at,
+		updated_at
+	)
+	VALUES (
+		'',
+		'WSI Inventory',
+		'http://localhost/theme/images/favicon.ico',
+		'http://localhost/theme/images/hoti-logo-white.png',
+		'',
+		'WSI Inventory',
+		'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.',
+		'795 Folsom Ave, Suite 600 San Francisco, CA 94107',
+		'https://www.google.com/maps?ll=14.584069,121.062934&z=17&t=m&hl=en&gl=PH&mapclient=embed&cid=4804121224053792784',
+		'6Lfgj7cUAAAAAJfCgUcLg4pjlAOddrmRPt86tkQK',
+		'6Lfgj7cUAAAAALOaFTbSFgCXpJldFkG8nFET9eRx',
+		'Privacy-Policy',
+		'This website uses cookies to ensure you get the best experience.',
+		'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.',
+		'(1) 8547 632521',
+		'13232107114',
+		'(1) 11 4752 1433',
+		'info@canvas.com',
+		'',
+		'2022-2023',
+		1,
+		NOW(),
+		NOW()
+	);
+
+
+
+
+
+
+12/07/2025
+
+Vehicles
+	Add Type (dropdown)
+################ DONE ##################
+ 
+New Requisition
+	Add VEHICLE dropdown (multiple) - this will show after user selects TYPE
+################ DONE ##################
+ 
+Supplier Maintenance
+	Add chekbox Vatable
+################ DONE ##################
+
+Requisition List
+	show AGING column (completed date of issuance - approved date of requisition)
+################ DONE ##################
+ 
+New PO
+	if seleted supplier is vatable then add 12% to unit price
+################ DONE ##################
+ 
+PO List
+	show AGING column (completed date of PO - approved date of PO)
+################ DONE ##################
+ 
+New Receiving
+	Supplier - change to read only, value will auto populate after selecting PO#
+	copy item price from PO to receiving
+################ DONE ##################
+
+
+
+12/03/2025
+
+Requisition - Add remarks\
+View page - Type, Parts Needed Assessment - Remve uncheck values
+################ DONE ##################
+
+
+Menu
+Homepage dashboard - change the menu same with other pages
+Group (Requisition, PO, Receiving, Issuance)
+################ DONE ##################
+
+
+PO - create page
+search item - show ris#
+Quantity rename to Requested Qty
+View PO - show ris#
+################ DONE ##################
+
+
+
+12/01/2025
+
+Products
+	Remove label Non-Inventory
+################ DONE ##################
+
+Add/Edit Product
+	convert radio to checkbox "Non-Inventory Item"
+################ DONE ##################
+ 
+Receiving New/Edit
+	Add New of Vat column. if Vat is checked, then show Net of Vat column, value is Price * 1.12
+################ DONE ##################
+
+
+
+
+11/27/2025
+
+
+TOPICS DISCUSSED:
+
+VAT and Non-VAT Items
+WSI clarifies if an item should tagged as VAT or non-VAT only when in receiving, during the creation of product, or during the creation of a PO.
+TFLP states that the tagging of an item should be on the receiving phase.
+Actions
+Items are to be tagged as VAT or non-VAT on the receiving phase.
+
+################ DONE ##################
+
+
+ 
+Checkbox “No Inventory”
+TFLP inquires if there is to be a checkbox labeled “no inventory” during item creation.
+TFLP confirms that there is.
+WSI further asks if items tagged as no inventory should not be included in the reports module.
+TFLP confirms this as well.
+Actions
+Addition of a checkbox labeled “No Inventory” during Item Creation.
+Items with the tagged “No Inventory” are not to be included in the reports.
+
+################ DONE ##################
+
+
+ 
+Creation of Request
+WSI clarifies if it is needed to creation a “Material Request” wherein the Department/Section may input the requisition and after which is to be converted into a PO.
+TFLP agrees that it is so.
+ 
+Request Form
+WSI inquires if TFLP has a request form format that they can use to integrate to the system.
+TFLP states that there is and have already sent it to WSI.
+WSI clarifies if a request form equals to 1 PO or if it is possible to have multiple requests on 1 PO item.
+TFLP states it is possible to have multiple form for 1 PO.
+Actions
+TFLP is to send request form format to WSI.
+Updating of PO items to have multiple forms per PO.
+ 
+Approval Process in Requisition.
+WSI inquires if there is an approval process in requisitions.
+TFLP states that there is an approval process.
+WSI inquires if the approval is to be done in the system or if it should be an attachment instead.
+TFLP states that they want the approvals to be an attachment.
+Actions
+Adding of Approval Process in Requisitions.
+Adding attachment to forms for the approval process.
+ 
+Initial Output Presentation
+WSI states that by the final week of November, they should be able to present the initial output to TFLP.
+TFLP states that they await and will check the initial output.
+ 
+Connecting to TFLP Server
+WSI inquires if they can access TFLP’s server for further checking.
+TFLP agrees to let WSI access their servers.
+Actions
+TFLP allows WSI access to their server.
+
+################ DONE ##################
+
+
+
