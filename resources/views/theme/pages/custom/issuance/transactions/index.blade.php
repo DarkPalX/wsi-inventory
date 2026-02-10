@@ -103,7 +103,31 @@
                                 <td valign="middle">{{ (new DateTime($transaction->date_released))->format('M d, Y') }}</td>
                                 {{-- <td valign="middle" width="20%"><small>{!! \App\Models\Custom\IssuanceHeader::receivers_name($transaction->id) !!}</small></td> --}}
                                 <td valign="middle">{{ $transaction->actual_receiver }}</td>
-                                <td valign="middle">{{ $transaction_info->vehicle->plate_no ?? '' }}</td>
+                                {{-- <td valign="middle">{{ $transaction_info->vehicle->plate_no ?? '' }}</td> --}}
+                                <td valign="middle">
+                                    @if(!empty($transaction_info->vehicle) && isset($transaction_info->vehicle->plate_no))
+                                        {{-- OLD DATA --}}
+                                        {{ $transaction_info->vehicle->plate_no }}
+
+                                    @elseif(!empty($transaction_info->vehicle_id))
+                                        {{-- NEW DATA --}}
+                                        @php
+                                            $vehicleIds = is_array($transaction_info->vehicle_id)
+                                                ? $transaction_info->vehicle_id
+                                                : json_decode($transaction_info->vehicle_id, true);
+
+                                            $plates = \App\Models\Custom\Vehicle::whereIn('id', $vehicleIds ?? [])
+                                                        ->pluck('plate_no')
+                                                        ->toArray();
+                                        @endphp
+
+                                        {{ implode(', ', $plates) }}
+
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+
                                 <td valign="middle">
                                     <strong>{{ User::getName($transaction->created_by) }}</strong><br>
                                     {{ Setting::date_for_listing($transaction->created_at) }}

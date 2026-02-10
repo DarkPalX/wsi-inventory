@@ -142,12 +142,17 @@
 															{{ $purchase_order_detail->item->type->name }}
 														</td>
 														<td>
-															@if($purchase_order->supplier->is_vatable == 0)
+															{{-- @if($purchase_order->supplier->is_vatable == 0)
 																<span class="display-price">{{ number_format($purchase_order_detail->price ?? 0, 2) }}</span>
 															@else
 																<span class="display-price">{{ number_format($purchase_order_detail->price - $purchase_order_detail->vat_inclusive_price ?? 0, 2) }}</span>
+															@endif --}}
+															@if($purchase_order->supplier->is_vatable == 0)
+																<span class="display-price">{{ $purchase_order_detail->price ?? 0 }}</span>
+															@else
+																<span class="display-price">{{ $purchase_order_detail->price - $purchase_order_detail->vat_inclusive_price ?? 0 }}</span>
 															@endif
-															<input type="hidden" name="orig_price[]" value="{{ number_format($purchase_order_detail->price ?? 0, 2) }}">
+															<input type="hidden" name="orig_price[]" value="{{ $purchase_order_detail->price }}">
 														</td>
 														<td class="vat-col" @if($purchase_order->supplier->is_vatable == 0) style="display:none;" @endif>
 															<input type="hidden" name="vat_rate[]" class="vat-input" value="{{ $purchase_order_detail->vat }}">
@@ -169,17 +174,7 @@
 															<input name="po_item_remarks[]" type="text" value="{{ explode('|#|', $purchase_order_detail->remarks)[0] }}">
 														</td>
 														<td>
-															<input name="quantity[]" 
-																type="number" step="1" class="text-end" value="{{ $purchase_order_detail->quantity }}" min="1" onclick="this.select()"
-																oninput="recalculateRow(this)"
-																{{-- oninput="
-																	this.value = this.value < 1 ? 1 : this.value; 
-																	var price = {{ $purchase_order_detail->item->price }};  // price as a number, no .toFixed(2)
-																	var quantity = parseFloat(this.value); 
-																	var subtotal = (price * quantity);  // Perform calculation without rounding here
-																	this.closest('tr').querySelector('.subtotal').value = subtotal.toFixed(2); 
-																"  --}}
-															>
+															<input name="quantity[]" class="text-end" type="number" step="1" value="{{ $purchase_order_detail->quantity }}" min="1" onclick="this.select()" oninput="recalculateRow(this)">
 														</td>
 														<td class="text-end">
 															<input class="subtotal text-end border-0" name="subtotal[]" type="number" 
@@ -483,8 +478,12 @@
 			let subtotal = row.find('.subtotal');
 
 			if (isVatable == 1) {
-				let vatAmount = price * (VAT_RATE / 100);
-				let netPrice = price - vatAmount;
+				// let vatAmount = price * (VAT_RATE / 100);
+				// let netPrice = price - vatAmount;
+				let vatFactor = 1 + (VAT_RATE / 100);
+				let netPrice = price / vatFactor;
+				let vatAmount = price - netPrice;
+
 				displayPriceCell.text(netPrice.toFixed(2));
 				vatInput.val(VAT_RATE);
 				vatIncl.val(vatAmount.toFixed(2)).show();
@@ -510,8 +509,12 @@
 			let subtotalInput = row.find('.subtotal');
 
 			if (isVatable == 1) {
-				let vatAmount = price * (VAT_RATE / 100);
-				let netPrice = price - vatAmount;
+				// let vatAmount = price * (VAT_RATE / 100);
+				// let netPrice = price - vatAmount;
+				let vatFactor = 1 + (VAT_RATE / 100);
+				let netPrice = price / vatFactor;
+				let vatAmount = price - netPrice;
+
 				displayPriceCell.text(netPrice.toFixed(2));
 				vatInput.val(VAT_RATE);
 				vatIncl.val(vatAmount.toFixed(2)).show();
@@ -689,17 +692,25 @@
 					let risCell = newRow.insertCell(8);
 					risCell.innerHTML = ris_no + `<input name="ris_no[]" type="hidden" value="${ris_no}">`;
 
+					// Purpose
+					let purposeCell = newRow.insertCell(9);
+					purposeCell.innerHTML = `<input name="po_item_purpose[]" type="text">`;
+
+					// Remarks
+					let remarksCell = newRow.insertCell(10);
+					remarksCell.innerHTML = `<input name="po_item_remarks[]" type="text">`;
+
 					// Quantity
-					let qtyCell = newRow.insertCell(9);
+					let qtyCell = newRow.insertCell(11);
 					qtyCell.innerHTML = `<input name="quantity[]" class="text-end" type="number" step="1" value="${quantity}" min="1" onclick="this.select()" oninput="recalculateRow(this)">`;
 
 					// Subtotal
-					let subtotalCell = newRow.insertCell(10);
+					let subtotalCell = newRow.insertCell(12);
 					subtotalCell.className = 'text-end';
 					subtotalCell.innerHTML = `<input class="subtotal text-end border-0" name="subtotal[]" type="number" value="${price.toFixed(2)*quantity}" readonly>`;
 
 					// Extra hidden fields
-					let extraCell = newRow.insertCell(11);
+					let extraCell = newRow.insertCell(13);
 					extraCell.innerHTML = `<input type="hidden" name="item_purpose[]" value="${purpose}">
 										<input type="hidden" name="item_remarks[]" value="${remarks}">`;
 

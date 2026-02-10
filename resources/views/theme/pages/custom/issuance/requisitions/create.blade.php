@@ -349,23 +349,20 @@
 	<script>
 		$(document).ready(function() {
 
-			let firstLoad = true; // <-- NEW FLAG
+			let selectedVehicleIds = @json(old('vehicle_id', $requisition->vehicle_id ?? []));
+			let firstLoad = true;
 
 			function loadVehiclesByType() {
 
 				let selectedTypes = $('input[name="requisition_type[]"]:checked')
-					.map(function() { return $(this).val(); })
+					.map(function () { return $(this).val(); })
 					.get();
 
 				let $select = $('#vehicle_id');
-				let oldSelected = $select.data('old') || [];
 
-				if (selectedTypes.length === 0) {
+				if (!selectedTypes.length) {
 					$('#vehicle-row').hide();
-					$select.empty();
-					if ($select.hasClass('select2-hidden-accessible')) {
-						$select.trigger('change.select2');
-					}
+					$select.empty().trigger('change');
 					return;
 				}
 
@@ -373,36 +370,28 @@
 					url: "{{ route('issuance.vehicles.search-vehicle') }}",
 					method: "GET",
 					data: { types: selectedTypes },
-					success: function(response) {
+					success: function (response) {
 
 						$select.empty();
 
-						response.forEach(function(vehicle) {
+						response.forEach(vehicle => {
 
-							let isSelected = false;
+							let isSelected = firstLoad
+								&& selectedVehicleIds.includes(vehicle.id);
 
-							// USE OLD DATA ONLY on first load
-							if (firstLoad) {
-								isSelected = oldSelected.includes(vehicle.id.toString());
-							}
-
-							$select.append(
-								$('<option>', {
-									value: vehicle.id,
-									text: `${vehicle.plate_no} - ${vehicle.type ?? 'NO TYPE'}`,
-									selected: isSelected
-								})
-							);
+							$select.append(new Option(
+								`${vehicle.plate_no} - ${vehicle.type ?? 'NO TYPE'}`,
+								vehicle.id,
+								isSelected,
+								isSelected
+							));
 						});
 
 						$('#vehicle-row').toggle(response.length > 0);
 
-						if ($select.hasClass('select2-hidden-accessible')) {
-							$select.trigger('change.select2');
-						}
+						$select.trigger('change');
 
-						// After the VERY FIRST load, stop using oldSelected
-						firstLoad = false;
+						firstLoad = false; // 🔥 VERY IMPORTANT
 					}
 				});
 			}

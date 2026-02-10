@@ -66,12 +66,22 @@
 								<div class="form-group row" id="vehicle-row" @if(!$requisition->vehicle_id) style="display:none;" @endif>
 									<label for="vehicle_id" class="col-sm-3 col-form-label">Vehicle</label>
 									<div class="col-sm-9">
-										<select id="vehicle_id" name="vehicle_id[]" class="select-tags form-select" multiple 
-												style="width:100%;" 
-												data-old='@json(old("vehicle_id", $requisition->vehicle_id ?? []))'>
+										@php
+											$selectedVehicles = old(
+												'vehicle_id',
+												is_array($requisition->vehicle_id ?? null)
+													? $requisition->vehicle_id
+													: json_decode($requisition->vehicle_id ?? '[]', true)
+											) ?? [];
+										@endphp
+
+										<select id="vehicle_id" name="vehicle_id[]" class="select-tags form-select" multiple style="width:100%;">
 											<option value="">-- SELECT VEHICLE --</option>
+
 											@foreach($vehicles as $vehicle)
-												<option value="{{ $vehicle->id }}" data-type="{{ $vehicle->type }}">
+												<option value="{{ $vehicle->id }}"
+													data-type="{{ $vehicle->type }}"
+													{{ in_array($vehicle->id, $selectedVehicles) ? 'selected' : '' }}>
 													{{ $vehicle->plate_no . ' - ' . ($vehicle->type ?? 'NO TYPE') }}
 												</option>
 											@endforeach
@@ -168,13 +178,6 @@
 																@endforeach
 															</select>
 														</td>
-														{{-- <td>
-															<select name="item_purpose[${rowIndex}][]" class="select-tags form-select vehicle-child" multiple style="width:100%;">
-																@foreach(json_decode($requisition_detail->purpose) as $item_purpose)
-																	<option value="{{ $item_purpose }}">{{ $item_purpose }}</option>
-																@endforeach
-															</select>
-														</td> --}}
 														<td>
 															<input name="item_remarks[]" type="text" value="{{ $requisition_detail->remarks }}">
 														</td>
@@ -410,23 +413,20 @@
 	<script>
 		$(document).ready(function() {
 
-			let firstLoad = true; // <-- NEW FLAG
+			let selectedVehicleIds = @json(old('vehicle_id', $requisition->vehicle_id ?? []));
+			let firstLoad = true;
 
 			function loadVehiclesByType() {
 
 				let selectedTypes = $('input[name="requisition_type[]"]:checked')
-					.map(function() { return $(this).val(); })
+					.map(function () { return $(this).val(); })
 					.get();
 
 				let $select = $('#vehicle_id');
-				let oldSelected = $select.data('old') || [];
 
-				if (selectedTypes.length === 0) {
+				if (!selectedTypes.length) {
 					$('#vehicle-row').hide();
-					$select.empty();
-					if ($select.hasClass('select2-hidden-accessible')) {
-						$select.trigger('change.select2');
-					}
+					$select.empty().trigger('change');
 					return;
 				}
 
@@ -434,36 +434,28 @@
 					url: "{{ route('issuance.vehicles.search-vehicle') }}",
 					method: "GET",
 					data: { types: selectedTypes },
-					success: function(response) {
+					success: function (response) {
 
 						$select.empty();
 
-						response.forEach(function(vehicle) {
+						response.forEach(vehicle => {
 
-							let isSelected = false;
+							let isSelected = firstLoad
+								&& selectedVehicleIds.includes(vehicle.id);
 
-							// USE OLD DATA ONLY on first load
-							if (firstLoad) {
-								isSelected = oldSelected.includes(vehicle.id.toString());
-							}
-
-							$select.append(
-								$('<option>', {
-									value: vehicle.id,
-									text: `${vehicle.plate_no} - ${vehicle.type ?? 'NO TYPE'}`,
-									selected: isSelected
-								})
-							);
+							$select.append(new Option(
+								`${vehicle.plate_no} - ${vehicle.type ?? 'NO TYPE'}`,
+								vehicle.id,
+								isSelected,
+								isSelected
+							));
 						});
 
 						$('#vehicle-row').toggle(response.length > 0);
 
-						if ($select.hasClass('select2-hidden-accessible')) {
-							$select.trigger('change.select2');
-						}
+						$select.trigger('change');
 
-						// After the VERY FIRST load, stop using oldSelected
-						firstLoad = false;
+						firstLoad = false; // 🔥 VERY IMPORTANT
 					}
 				});
 			}
@@ -554,10 +546,25 @@
 	<script>
 		jQuery(document).ready( function(){
 			// select Tags
-			jQuery(".select-tags").select2({
-				tags: true
+			$(document).ready(function () {
+				initSelectTags();
 			});
+
+			// jQuery(".select-tags").select2({
+			// 	tags: true
+			// });
 		});
+
+		function initSelectTags(context = document) {
+			$(context).find('.select-tags').each(function () {
+				if (!$(this).hasClass('select2-hidden-accessible')) {
+					$(this).select2({
+						tags: true,
+						width: '100%'
+					});
+				}
+			});
+		}
 	</script>
 
 	<script>
@@ -573,7 +580,7 @@
 						method: 'GET',
 						data: { query: searchQuery },
 						success: function(data) {
-							console.log(data);
+							// console.log(data);
 							let resultsTableBody = $('#search_results_table tbody');
 							resultsTableBody.html(''); // Clear the table
 
@@ -656,7 +663,20 @@
 							" 
 						>
 					`;
+
+					let rowIndex = selectedTableBody.rows.length - 1
+					let purposeCell = newRow.insertCell(6);
+					purposeCell.innerHTML = `
+						<select name="item_purpose[${rowIndex}][]" class="select-tags form-select vehicle-child" multiple style="width:100%;"></select>
+					`;
+
+					let remarksCell = newRow.insertCell(7);
+					remarksCell.innerHTML = '<input name="item_remarks[]" type="text">';
 					
+					
+					initSelectTags(purposeCell);
+					syncVehicleToPurpose();
+
 
 					// Optionally remove the item from the search results
 					target.closest('tr').remove();
@@ -697,23 +717,20 @@
 	<script>
 		$(document).ready(function() {
 
-			let firstLoad = true; // <-- NEW FLAG
+			let selectedVehicleIds = @json(old('vehicle_id', $requisition->vehicle_id ?? []));
+			let firstLoad = true;
 
 			function loadVehiclesByType() {
 
 				let selectedTypes = $('input[name="requisition_type[]"]:checked')
-					.map(function() { return $(this).val(); })
+					.map(function () { return $(this).val(); })
 					.get();
 
 				let $select = $('#vehicle_id');
-				let oldSelected = $select.data('old') || [];
 
-				if (selectedTypes.length === 0) {
+				if (!selectedTypes.length) {
 					$('#vehicle-row').hide();
-					$select.empty().append('<option value="">-- SELECT VEHICLE --</option>');
-					if ($select.hasClass('select2-hidden-accessible')) {
-						$select.trigger('change.select2');
-					}
+					$select.empty().trigger('change');
 					return;
 				}
 
@@ -721,36 +738,28 @@
 					url: "{{ route('issuance.vehicles.search-vehicle') }}",
 					method: "GET",
 					data: { types: selectedTypes },
-					success: function(response) {
+					success: function (response) {
 
-						$select.empty().append('<option value="">-- SELECT VEHICLE --</option>');
+						$select.empty();
 
-						response.forEach(function(vehicle) {
+						response.forEach(vehicle => {
 
-							let isSelected = false;
+							let isSelected = firstLoad
+								&& selectedVehicleIds.includes(vehicle.id);
 
-							// USE OLD DATA ONLY on first load
-							if (firstLoad) {
-								isSelected = oldSelected.includes(vehicle.id.toString());
-							}
-
-							$select.append(
-								$('<option>', {
-									value: vehicle.id,
-									text: `${vehicle.plate_no} - ${vehicle.type ?? 'NO TYPE'}`,
-									selected: isSelected
-								})
-							);
+							$select.append(new Option(
+								`${vehicle.plate_no} - ${vehicle.type ?? 'NO TYPE'}`,
+								vehicle.id,
+								isSelected,
+								isSelected
+							));
 						});
 
 						$('#vehicle-row').toggle(response.length > 0);
 
-						if ($select.hasClass('select2-hidden-accessible')) {
-							$select.trigger('change.select2');
-						}
+						$select.trigger('change');
 
-						// After the VERY FIRST load, stop using oldSelected
-						firstLoad = false;
+						firstLoad = false; // 🔥 VERY IMPORTANT
 					}
 				});
 			}
@@ -765,6 +774,74 @@
 			// Page load
 			loadVehiclesByType();
 
+		});
+	</script>
+
+	<script>
+		function syncVehicleToPurpose() {
+
+			const $vehicle = $('#vehicle_id');
+			if (!$vehicle.length) return;
+
+			// Vehicles currently selected in the main selector
+			const selectedVehicles = $vehicle.find('option:selected').map(function () {
+				return {
+					value: this.value,
+					text: this.text
+				};
+			}).get();
+
+			$('.vehicle-child').each(function () {
+
+				const $purpose = $(this);
+
+				// Capture existing selections BEFORE touching select2
+				const existingValues = $purpose.val() || [];
+
+				// Destroy select2 safely
+				if ($purpose.hasClass('select2-hidden-accessible')) {
+					$purpose.select2('destroy');
+				}
+
+				// Add missing vehicle options ONLY
+				selectedVehicles.forEach(v => {
+					if ($purpose.find(`option[value="${v.text}"]`).length === 0) {
+						$purpose.append(
+							$('<option>', {
+								value: v.text,
+								text: v.text
+							})
+						);
+					}
+				});
+
+				// OPTIONAL: remove vehicle options that are no longer selected
+				// Uncomment if you want strict syncing
+				/*
+				$purpose.find('option').each(function () {
+					const stillExists = selectedVehicles.some(v => v.value === this.value);
+					if (!stillExists && !existingValues.includes(this.value)) {
+						$(this).remove();
+					}
+				});
+				*/
+
+				// Restore previous selections
+				$purpose.val(existingValues);
+
+				// Re-init select2
+				$purpose.select2({
+					tags: true,
+					width: '100%'
+				});
+
+				// Trigger change so Select2 UI updates
+				$purpose.trigger('change');
+			});
+		}
+				
+		$('#vehicle_id').on('change', function () {
+			syncVehicleToPurpose();
 		});
 	</script>
 @endsection --}}

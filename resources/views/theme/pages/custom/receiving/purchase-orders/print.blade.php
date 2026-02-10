@@ -158,7 +158,9 @@
                 <td colspan="6" class="text-right">12% VAT:</td>
                 <td class="text-right" style="border-right: 0;">
                     @if($purchase_order_details->sum('vat') > 0)
-                        {{ number_format(($purchase_order->grand_total * env('VAT_RATE') / 100), 2, '.', ',') }}
+                        {{-- {{ number_format(($purchase_order->grand_total * env('VAT_RATE') / 100), 2, '.', ',') }} --}}
+                        {{ number_format( $purchase_order->grand_total - ($purchase_order->grand_total / (1 + (env('VAT_RATE') / 100))), 2, '.', ',') }}
+
                     @else
                         0.00
                     @endif
@@ -178,15 +180,15 @@
 
         <div class="section-title">(3) Terms & Conditions</div>
         <ol class="small-text">
-            <li>Vendor agrees to sell the goods or services to WSI Inventory, INC</li>
-            <li>Transfer method: Delivery by Vendor / Picking up by WSI</li>
+            <li>Vendor agrees to sell the goods or services to TF LOGISTICS PHILIPPINES, INC</li>
+            <li>Transfer method: Delivery by Vendor / Picking up by TFLP</li>
             <li>VAT: Inclusive / Exclusive / Non-Vatable</li>
             <li>Payment Method: Bank Cheque / Cash / Bank Transfer</li>
             <li>Payment Timing: Collect (Credit Line) / Prepaid(COD) / Other</li>
             <li>Payment Term: 30 days</li>
             <li>Effectivity: 30 days from issued date</li>
             <li>PO number must be shown in all documents relating to this PO</li>
-            <li>Billing invoice and/or Official Receipt under this PO must be issued to WSI Inventory, INC</li>
+            <li>Billing invoice and/or Official Receipt under this PO must be issued to TF LOGISTICS PHILIPPINES, INC</li>
             <li>
                 Billing invoice and/or Official Receipt to be full filled below information:
                 <table>

@@ -377,8 +377,12 @@
 			let subtotal = row.find('.subtotal');
 
 			if (isVatable == 1) {
-				let vatAmount = price * (VAT_RATE / 100);
-				let netPrice = price - vatAmount;
+				// let vatAmount = price * (VAT_RATE / 100);
+				// let netPrice = price - vatAmount;
+				let vatFactor = 1 + (VAT_RATE / 100);
+				let netPrice = price / vatFactor;
+				let vatAmount = price - netPrice;
+
 				displayPriceCell.text(netPrice.toFixed(2));
 				vatInput.val(VAT_RATE);
 				vatIncl.val(vatAmount.toFixed(2)).show();
@@ -404,8 +408,12 @@
 			let subtotalInput = row.find('.subtotal');
 
 			if (isVatable == 1) {
-				let vatAmount = price * (VAT_RATE / 100);
-				let netPrice = price - vatAmount;
+				// let vatAmount = price * (VAT_RATE / 100);
+				// let netPrice = price - vatAmount;
+				let vatFactor = 1 + (VAT_RATE / 100);
+				let netPrice = price / vatFactor;
+				let vatAmount = price - netPrice;
+
 				displayPriceCell.text(netPrice.toFixed(2));
 				vatInput.val(VAT_RATE);
 				vatIncl.val(vatAmount.toFixed(2)).show();

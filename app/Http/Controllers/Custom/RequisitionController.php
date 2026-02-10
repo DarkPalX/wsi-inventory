@@ -103,6 +103,34 @@ class RequisitionController extends Controller
 
     public function store(RequisitionRequest $request)
     {
+        
+        // $item_count = 0;
+        // foreach($request->item_id as $item){
+        //     if($item > 0){
+        //         $item_info = Item::where('id', $item)->first();
+
+        //         $requestData['item_id'] = $item;
+        //         $requestData['sku'] = $request->sku[$item_count];
+        //         $requestData['quantity'] = $request->quantity[$item_count];
+        //         // $requestData['purpose'] = json_encode((array) ($request->item_purpose[$item_count] ?? ''));
+        //         // $purpose = $request->item_purpose[$item_count] ?? [];
+
+        //         $requestData['purpose'] = empty(array_filter((array) ($request->item_purpose[$item_count] ?? []))) ? json_encode([]) : json_encode($purpose);
+
+        //         $requestData['remarks'] = $request->item_remarks[$item_count];
+
+
+        //         $item_count++;
+
+        //         dd($requestData['purpose']);
+        //     }
+        // }
+
+
+
+
+
+
         $requestData = $request->validated();
 
         // REQUISITION HEADER CREATION
@@ -136,7 +164,8 @@ class RequisitionController extends Controller
             }
 
             $requisition_header->update([
-                'vehicle_id' => json_encode($vehicle_ids, JSON_UNESCAPED_SLASHES)
+                'vehicle_id' => $vehicle_ids
+                // 'vehicle_id' => json_encode($vehicle_ids, JSON_UNESCAPED_SLASHES)
             ]);
         }
         
@@ -151,7 +180,8 @@ class RequisitionController extends Controller
                 $requestData['item_id'] = $item;
                 $requestData['sku'] = $request->sku[$item_count];
                 $requestData['quantity'] = $request->quantity[$item_count];
-                $requestData['purpose'] = json_encode((array) ($request->item_purpose[$item_count] ?? ''));
+                $requestData['purpose'] = empty(array_filter((array) ($request->item_purpose[$item_count] ?? []))) ? json_encode([]) : json_encode($purpose);
+                // $requestData['purpose'] = json_encode((array) ($request->item_purpose[$item_count] ?? ''));
                 $requestData['remarks'] = $request->item_remarks[$item_count];
 
                 RequisitionDetail::create($requestData);
@@ -223,7 +253,8 @@ class RequisitionController extends Controller
             }
             
             $requisition->update([
-                'vehicle_id' => json_encode($vehicle_ids, JSON_UNESCAPED_SLASHES)
+                'vehicle_id' => $vehicle_ids
+                // 'vehicle_id' => json_encode($vehicle_ids, JSON_UNESCAPED_SLASHES)
             ]);
 
         } 
@@ -243,7 +274,8 @@ class RequisitionController extends Controller
                 $requestData['item_id'] = $item;
                 $requestData['sku'] = $request->sku[$item_count];
                 $requestData['quantity'] = $request->quantity[$item_count];
-                $requestData['purpose'] = json_encode((array) ($request->item_purpose[$item_count] ?? ''));
+                $requestData['purpose'] = empty(array_filter((array) ($request->item_purpose[$item_count] ?? []))) ? json_encode([]) : json_encode($purpose);
+                // $requestData['purpose'] = json_encode((array) ($request->item_purpose[$item_count] ?? ''));
                 $requestData['remarks'] = $request->item_remarks[$item_count];
 
                 RequisitionDetail::create($requestData);

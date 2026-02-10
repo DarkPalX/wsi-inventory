@@ -15,6 +15,9 @@ class RequisitionHeader extends Model
     
     protected $table = 'requisition_headers';
     protected $fillable = ['ref_no', 'date_requested', 'date_needed', 'requisition_type', 'requisition_parts_needed', 'requisition_assessment', 'vehicle_id', 'purpose', 'remarks','status', 'requested_by', 'requested_at', 'approved_by', 'approved_at', 'posted_by', 'posted_at', 'cancelled_by', 'cancelled_at', 'created_by', 'updated_by'];
+    // protected $casts = [
+    //     'vehicle_id' => 'array',
+    // ];
 
     
     public function details()
@@ -143,6 +146,15 @@ class RequisitionHeader extends Model
 
                 $oldValue = $model[$fieldName];
                 if ($oldValue != $value) {
+
+                    if (is_array($oldValue)) {
+                        $oldValue = json_encode($oldValue);
+                    }
+
+                    if (is_array($value)) {
+                        $value = json_encode($value);
+                    }
+
                     ActivityLog::create([
                         'log_by' => auth()->id(),
                         'activity_type' => 'update',
